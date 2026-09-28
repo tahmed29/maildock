@@ -1,2 +1,2 @@
-# maildock
+To be updated.
 
