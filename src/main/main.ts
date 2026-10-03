@@ -1,7 +1,8 @@
 import { app, BrowserWindow } from "electron";
+import { join} from "node:path";
 
 function createWindow(): void {
-  new BrowserWindow({
+  const mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
     minWidth: 900,
@@ -15,7 +16,12 @@ function createWindow(): void {
     },
   });
 
-  // TODO: Connect the React UI.
+  mainWindow
+    .loadFile(join(__dirname, "../renderer/index.html"))
+    .catch((error: unknown) => {
+      console.error("Failed to load interface:", error);
+      app.exit(1);
+    });
 }
 
 app.whenReady().then(() => {
