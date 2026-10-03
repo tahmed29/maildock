@@ -10,7 +10,7 @@
     "build:main": "tsc --project tsconfig.main.json",
     "build-renderer": "tsc --project tsconfig.renderer.json && vite build",
     "build": "npm run build:main && npm run build-renderer",
-    "start": "npm run build:main && electron ."
+    "start": "npm run build && electron ."
   },
   "devDependencies": {
     "@types/react": "19.3.0",
