@@ -1,8 +1,14 @@
+import Sidebar from "./components/Sidebar";
+
 export default function App() {
     return (
-        <main>
-            <h1 className="text-sky-400 tracking-wide">MailDock</h1>
-            <p>Welcome to MailDock! Your local workspace for organized email.</p>
-        </main>
+        <div className="flex min-h-screen">
+            <Sidebar />
+
+            <main className="min-w-0 flex-1">
+                <h1>Inbox</h1>
+                <p>Your messages will appear here once an account is connected.</p>
+            </main>
+        </div>
     );
 }
