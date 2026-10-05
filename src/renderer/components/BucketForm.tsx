@@ -1,10 +1,15 @@
 import { useState } from "react";
 type BucketFormProps = {
     onCreate: (name: string) => void;
+    existingNames: string[];
 };
 
-export default function BucketsForm({ onCreate }: BucketFormProps) {
+export default function BucketsForm({ 
+    onCreate, 
+    existingNames 
+}: BucketFormProps) {
     const [name, setName] = useState("");
+    const [error, setError] = useState("");
 
     return (
         <form 
@@ -15,8 +20,18 @@ export default function BucketsForm({ onCreate }: BucketFormProps) {
                     const trimmedName = name.trim();
                     if (!trimmedName) return;
 
+                    const duplicate = existingNames.some(
+                        (existing) => existing.trim().toLowerCase() === trimmedName.toLowerCase()
+                    );
+
+                    if (duplicate) {
+                        setError("A bucket with that name already exists.");
+                        return;
+                    }
+                    
                     onCreate(trimmedName);
                     setName("");
+                    setError("");
                 }}
             >
             <label
@@ -31,11 +46,22 @@ export default function BucketsForm({ onCreate }: BucketFormProps) {
                 name="bucket-name"
                 type="text"
                 value={name}
-                onChange={(event) => setName(event.target.value)}
+                aria-invalid={Boolean(error)}
+                aria-describedby={error ? "bucket-name-error" : undefined}
+                onChange={(event) => {
+                    setName(event.target.value);
+                    setError("");
+                }}
                 maxLength={60}
                 placeholder="e.g. Work or Receipts"
                 className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 placeholder:text-slate-500 focus:border-sky-400 focus:outline-none"
             />
+
+            {error && (
+                <p id="bucket-name-error" role="alert" className="text-sm text-red-400">
+                    {error}
+                </p>
+            )}
 
             <button
                 type="submit"

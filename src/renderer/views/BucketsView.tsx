@@ -16,7 +16,10 @@ export default function BucketsView({
       <h1 id="buckets-heading">Smart Buckets</h1>
       <p>Create custom buckets to organize your mail with routing rules.</p>
 
-      <BucketForm onCreate={onCreate} />
+    <BucketForm 
+        onCreate={onCreate} 
+        existingNames={buckets.map((bucket) => bucket.name)} 
+    />
 
       {buckets.length === 0 ? (
         <div className="mt-8 rounded-xl border border-dashed border-slate-700 p-8">
