@@ -1,27 +1,22 @@
-import { useState } from "react";
 import BucketForm from "../components/BucketForm";
+import type { Bucket } from "../types/bucket";
 
-type Bucket = {
-  id: string;
-  name: string;
+type BucketsViewProps = {
+  buckets: Bucket[];
+  onCreate: (name: string) => void;
 };
 
-export default function BucketsView() {
-    const [buckets, setBuckets] = useState<Bucket[]>([]);
-
-    function createBucket(name: string) {
-        setBuckets((current) => [
-            ...current, 
-            { id: crypto.randomUUID(), name }
-        ]);
-    }
+export default function BucketsView({ 
+    buckets, 
+    onCreate, 
+}: BucketsViewProps) {
 
   return (
     <section aria-labelledby="buckets-heading">
       <h1 id="buckets-heading">Smart Buckets</h1>
       <p>Create custom buckets to organize your mail with routing rules.</p>
 
-      <BucketForm onCreate={createBucket} />
+      <BucketForm onCreate={onCreate} />
 
       {buckets.length === 0 ? (
         <div className="mt-8 rounded-xl border border-dashed border-slate-700 p-8">
