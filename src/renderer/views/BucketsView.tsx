@@ -1,3 +1,4 @@
+import { useState } from "react";
 import BucketForm from "../components/BucketForm";
 import type { Bucket } from "../types/bucket";
 
@@ -12,6 +13,8 @@ export default function BucketsView({
     onCreate,
     onRemove,
 }: BucketsViewProps) {
+
+const [pendingRemovalId, setPendingRemovalId] = useState<string | null>(null);
 
   return (
     <section aria-labelledby="buckets-heading">
@@ -44,15 +47,41 @@ export default function BucketsView({
                     </h2>
                     <p className="mt-2 text-sm">No routing rules configured.</p>
 
+                    {pendingRemovalId === bucket.id ? (
+                        <div className="mt-4">
+                            <p className="text-sm text-slate-300">Are you sure you want to remove this bucket?</p>
+                            <div className="mt-2 flex gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        onRemove(bucket.id);
+                                        setPendingRemovalId(null);
+                                    }}
+                                    className="rounded-md px-3 py-2 text-sm text-red-400 hover:bg-red-400/10"
+                                >
+                                    Confirm
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={() => setPendingRemovalId(null)}
+                                    className="rounded-md px-3 py-2 text-sm text-slate-300 hover:bg-slate-800"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    ) : (
+                    
                     <button
                         type="button"
-                        onClick={() => onRemove(bucket.id)}
+                        onClick={() => setPendingRemovalId(bucket.id)}
                         aria-label={`Remove ${bucket.name} bucket`}
                         className="mt-4 rounded-md px-3 py-2 text-sm text-red-400 hover:bg-red-400/10 focus-visible:outline-2 focus-visible:outline-red-400"
                     >
                         Remove
                     </button>
-
+                )}
                 </li>
             ))}
         </ul>
