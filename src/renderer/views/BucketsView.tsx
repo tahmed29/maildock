@@ -4,11 +4,13 @@ import type { Bucket } from "../types/bucket";
 type BucketsViewProps = {
   buckets: Bucket[];
   onCreate: (name: string) => void;
+  onRemove: (bucketId: string) => void;
 };
 
 export default function BucketsView({ 
     buckets, 
-    onCreate, 
+    onCreate,
+    onRemove,
 }: BucketsViewProps) {
 
   return (
@@ -41,6 +43,16 @@ export default function BucketsView({
                         {bucket.name}
                     </h2>
                     <p className="mt-2 text-sm">No routing rules configured.</p>
+
+                    <button
+                        type="button"
+                        onClick={() => onRemove(bucket.id)}
+                        aria-label={`Remove ${bucket.name} bucket`}
+                        className="mt-4 rounded-md px-3 py-2 text-sm text-red-400 hover:bg-red-400/10 focus-visible:outline-2 focus-visible:outline-red-400"
+                    >
+                        Remove
+                    </button>
+
                 </li>
             ))}
         </ul>

@@ -15,6 +15,11 @@ export default function App() {
         ]);
     }
 
+    function removeBucket(bucketId: string) {
+        setBuckets((current) => 
+            current.filter((bucket) => bucket.id !== bucketId));
+    }
+
     return (
         <div className="flex min-h-screen">
             <Sidebar activeView={activeView} onNavigate={setActiveView} />
@@ -26,7 +31,11 @@ export default function App() {
                         <p>Your messages will appear here once an account is connected.</p>
                     </>
                 ) : (
-                    <BucketsView buckets={buckets} onCreate={createBucket} />
+                    <BucketsView 
+                        buckets={buckets} 
+                        onCreate={createBucket} 
+                        onRemove={removeBucket} 
+                    />
                 )}
             </main>
         </div>

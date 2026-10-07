@@ -18,7 +18,9 @@ h1 {
   font-weight: 600;
 }
 
-p {
-  margin: 0;
-  color: #9ca3af;
+@layer base {
+  p {
+    margin: 0;
+    color: #9ca3af;
+  }
 }
