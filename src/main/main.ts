@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, ipcMain } from "electron";
 import { join} from "node:path";
 
 function createWindow(): void {
@@ -10,6 +10,7 @@ function createWindow(): void {
     title: "MailDock",
     backgroundColor: "#111827",
     webPreferences: {
+      preload: join(__dirname, "preload.js"),
       nodeIntegration: false,
       contextIsolation: true,
       sandbox: true,
@@ -25,6 +26,8 @@ function createWindow(): void {
 }
 
 app.whenReady().then(() => {
+  ipcMain.handle("app:get-version", () => app.getVersion());
+
   createWindow();
 
   // Reopen on macOS dock click.

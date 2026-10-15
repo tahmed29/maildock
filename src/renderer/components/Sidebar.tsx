@@ -1,4 +1,5 @@
 import { navigationItems, type ViewId} from "../navigation";
+import { useEffect, useState } from "react";
 
 type SidebarProps = {
   activeView: ViewId;
@@ -6,6 +7,24 @@ type SidebarProps = {
 };
 
 export default function Sidebar({ activeView, onNavigate }: SidebarProps) {
+const [appVersion, setAppVersion] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    
+    window.maildock.getAppVersion()
+      .then((version) => {
+        if (active) setAppVersion(version);
+      })
+      .catch((error: unknown) => {
+        console.error("Failed to load app version:", error);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
   return (
     <aside className="flex w-60 shrink-0 flex-col border-r border-slate-800 bg-slate-950 p-5">
       <div className="text-xl font-semibold tracking-wide text-sky-400">
@@ -29,6 +48,11 @@ export default function Sidebar({ activeView, onNavigate }: SidebarProps) {
     </button>
   ))}
 </nav>
+  {appVersion && (
+    <p className="mt-auto pt-6 text-xs text-slate-500">
+      Version {appVersion}
+    </p>
+  )}
     </aside>
   );
 }
