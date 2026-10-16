@@ -2,6 +2,9 @@ import { app, BrowserWindow, ipcMain } from "electron";
 import { join } from "node:path";
 import { mkdirSync } from "node:fs";
 import { openDatabase } from "./database/connection.js";
+import { pathToFileURL } from "node:url";
+import type { IpcMainInvokeEvent } from "electron";
+import { insertBucket, listBuckets } from "./database/bucketRepository.js";
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -41,6 +44,29 @@ app.whenReady().then(() => {
   console.log("Database ready:", databasePath);
 
   ipcMain.handle("app:get-version", () => app.getVersion());
+
+    function checkBucketSender(event: IpcMainInvokeEvent): void {
+    const expectedUrl = pathToFileURL(
+      join(__dirname, "../renderer/index.html"),
+    ).href;
+
+    if (
+      event.senderFrame !== event.sender.mainFrame ||
+      event.senderFrame?.url !== expectedUrl
+    ) {
+      throw new Error("Untrusted bucket request.");
+    }
+  }
+
+  ipcMain.handle("buckets:list", (event) => {
+    checkBucketSender(event);
+    return listBuckets(database);
+  });
+
+  ipcMain.handle("buckets:create", (event, name: unknown) => {
+    checkBucketSender(event);
+    return insertBucket(database, name);
+  });
 
   createWindow();
 

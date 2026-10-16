@@ -1,12 +1,36 @@
 import type { ViewId } from "./navigation";
 import Sidebar from "./components/Sidebar";
 import type { Bucket } from "./types/bucket";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import BucketsView from "./views/BucketsView";
 
 export default function App() {
     const [activeView, setActiveView] = useState<ViewId>("inbox");
     const [buckets, setBuckets] = useState<Bucket[]>([]);
+
+    const [bucketLoadError, setBucketLoadError] = useState("");
+
+    useEffect(() => {
+      let active = true;
+
+      window.maildock.listBuckets()
+        .then((savedBuckets) => {
+          if (active) {
+            setBuckets(savedBuckets);
+         }
+       })
+       .catch((error: unknown) => {
+         console.error("Failed to load buckets:", error);
+
+         if (active) {
+           setBucketLoadError("Could not load saved buckets. Restart MailDock to retry.");
+        }
+      });
+
+      return () => {
+       active = false;
+      };
+}, []);
 
     function createBucket(name: string) {
         setBuckets((current) => [
@@ -46,6 +70,12 @@ export default function App() {
             <Sidebar activeView={activeView} onNavigate={setActiveView} />
 
             <main className="min-w-0 flex-1">
+                {bucketLoadError && (
+                    <p role="alert" className="mb-4 text-sm text-red-400">
+                        {bucketLoadError}
+                    </p>
+                )}
+
                 {activeView === "inbox" ? (
                     <>
                         <h1>Inbox</h1>
