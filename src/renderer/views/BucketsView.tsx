@@ -4,7 +4,7 @@ import type { Bucket } from "../types/bucket";
 
 type BucketsViewProps = {
   buckets: Bucket[];
-  onCreate: (name: string) => void;
+  onCreate: (name: string) => Promise<void>;
   onRemove: (bucketId: string) => void;
   onRename: (bucketId: string, name: string) => string | null;
 };

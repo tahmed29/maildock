@@ -1,6 +1,6 @@
 import { useState } from "react";
 type BucketFormProps = {
-    onCreate: (name: string) => void;
+    onCreate: (name: string) => Promise<void>;
     existingNames: string[];
 };
 
@@ -10,12 +10,14 @@ export default function BucketsForm({
 }: BucketFormProps) {
     const [name, setName] = useState("");
     const [error, setError] = useState("");
+    const [isSaving, setIsSaving] = useState(false);
 
     return (
         <form 
             className="mt-6 max-w-md"
-                onSubmit={(event) => {
+                onSubmit={async (event) => {
                     event.preventDefault();
+                    if (isSaving) return;
                     
                     const trimmedName = name.trim();
                     if (!trimmedName) return;
@@ -28,10 +30,19 @@ export default function BucketsForm({
                         setError("A bucket with that name already exists.");
                         return;
                     }
-                    
-                    onCreate(trimmedName);
-                    setName("");
+
+                    setIsSaving(true);
                     setError("");
+
+                    try {
+                        await onCreate(trimmedName);
+                        setName("");
+                    } catch (err: unknown) {
+                        console.error("Failed to create bucket:", err);
+                        setError("Could not save this bucke. Please try again.");
+                    } finally {
+                        setIsSaving(false);
+                    }
                 }}
             >
             <label
@@ -46,6 +57,7 @@ export default function BucketsForm({
                 name="bucket-name"
                 type="text"
                 value={name}
+                disabled={isSaving}
                 aria-invalid={Boolean(error)}
                 aria-describedby={error ? "bucket-name-error" : undefined}
                 onChange={(event) => {
@@ -65,10 +77,10 @@ export default function BucketsForm({
 
             <button
                 type="submit"
-                disabled={!name.trim()}
+                disabled={isSaving || !name.trim()}
                 className="mt-3 rounded-lg bg-sky-400 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-sky-300 disabled:cursor-not-allowed disabled:opacity-50"
             >
-                Create Bucket
+                {isSaving ? "Saving..." : "Create Bucket"}
             </button>
         </form>
     );

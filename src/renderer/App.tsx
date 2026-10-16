@@ -32,11 +32,10 @@ export default function App() {
       };
 }, []);
 
-    function createBucket(name: string) {
-        setBuckets((current) => [
-            ...current, 
-            { id: crypto.randomUUID(), name }
-        ]);
+    async function createBucket(name: string): Promise<void> {
+        const savedBucket = await window.maildock.createBucket(name);
+
+        setBuckets((current) => [...current, savedBucket]);
     }
 
     function removeBucket(bucketId: string) {
