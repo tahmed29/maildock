@@ -1,5 +1,7 @@
 import { app, BrowserWindow, ipcMain } from "electron";
-import { join} from "node:path";
+import { join } from "node:path";
+import { mkdirSync } from "node:fs";
+import { openDatabase } from "./database/connection.js";
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -26,6 +28,18 @@ function createWindow(): void {
 }
 
 app.whenReady().then(() => {
+  const storagePath = join(app.getPath("userData"), "storage");
+  mkdirSync(storagePath, { recursive: true });
+
+  const databasePath = join(storagePath, "maildock.db");
+  const database = openDatabase(databasePath);
+
+  app.once("will-quit", () => {
+    database.close();
+  });
+
+  console.log("Database ready:", databasePath);
+
   ipcMain.handle("app:get-version", () => app.getVersion());
 
   createWindow();
