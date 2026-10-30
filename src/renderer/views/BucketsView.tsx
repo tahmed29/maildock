@@ -6,7 +6,7 @@ type BucketsViewProps = {
   buckets: Bucket[];
   onCreate: (name: string) => Promise<void>;
   onRemove: (bucketId: string) => Promise<void>;
-  onRename: (bucketId: string, name: string) => string | null;
+  onRename: (bucketId: string, name: string) => Promise<string | null>;
 };
 
 export default function BucketsView({
@@ -23,6 +23,8 @@ export default function BucketsView({
   const [isRemoving, setIsRemoving] = useState(false);
   const [removalError, setRemovalError] = useState("");
 
+  const [isRenaming, setIsRenaming] = useState(false);
+
   async function confirmRemoval(bucketId: string): Promise<void> {
     if (isRemoving) return;
 
@@ -37,6 +39,29 @@ export default function BucketsView({
       setRemovalError("Could not remove this bucket. Please try again.");
     } finally {
       setIsRemoving(false);
+    }
+  }
+
+  async function saveRename(bucketId: string): Promise<void> {
+    if (isRenaming) return;
+
+    setIsRenaming(true);
+    setRenameError("");
+
+    try {
+      const error = await onRename(bucketId, draftName);
+
+      if (error) {
+        setRenameError(error);
+        return;
+      }
+
+      setEditingBucketId(null);
+    } catch (error: unknown) {
+      console.error("Failed to save rename:", error);
+      setRenameError("Could not rename this bucket. Please try again.");
+    } finally {
+      setIsRenaming(false);
     }
   }
 
@@ -65,7 +90,7 @@ export default function BucketsView({
           </p>
         </div>
       ) : (
-        <fieldset disabled={isRemoving} className="min-w-0">
+        <fieldset disabled={isRemoving || isRenaming} className="min-w-0">
         <ul className="mt-8 grid gap-4 sm:grid-cols-2">
           {buckets.map((bucket) => (
             <li
@@ -110,18 +135,10 @@ export default function BucketsView({
                   <div className="mt-3 flex gap-3">
                     <button
                       type="button"
-                      onClick={() => {
-                        const error = onRename(bucket.id, draftName);
-                        if (error) {
-                          setRenameError(error);
-                          return;
-                        }
-                        setEditingBucketId(null);
-                        setRenameError("");
-                      }}
+                      onClick={() => void saveRename(bucket.id)}
                       className="rounded-md px-3 py-2 text-sm text-sky-400 hover:bg-sky-400/10"
                     >
-                      Save
+                      {isRenaming ? "Saving..." : "Save"}
                     </button>
 
                     <button

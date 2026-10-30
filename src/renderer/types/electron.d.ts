@@ -7,6 +7,7 @@ declare global {
       listBuckets: () => Promise<Bucket[]>;
       createBucket: (name: string) => Promise<Bucket>;
       removeBucket: (bucketId: string) => Promise<void>;
+      renameBucket: (bucketId: string, name: string) => Promise<Bucket>;
     };
   }
 }

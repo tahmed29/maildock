@@ -4,7 +4,7 @@ import { mkdirSync } from "node:fs";
 import { openDatabase } from "./database/connection.js";
 import { pathToFileURL } from "node:url";
 import type { IpcMainInvokeEvent } from "electron";
-import { deleteBucket, insertBucket, listBuckets } from "./database/bucketRepository.js";
+import { deleteBucket, insertBucket, listBuckets, updateBucketName, } from "./database/bucketRepository.js";
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -72,6 +72,14 @@ app.whenReady().then(() => {
     checkBucketSender(event);
     return deleteBucket(database, bucketId);
   });
+
+  ipcMain.handle(
+    "buckets:rename",
+    (event, bucketId: unknown, name: unknown) => {
+      checkBucketSender(event);
+      return updateBucketName(database, bucketId, name);
+    },
+  );
 
   createWindow();
 

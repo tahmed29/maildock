@@ -13,4 +13,7 @@ contextBridge.exposeInMainWorld('maildock', {
 
     removeBucket: (bucketId: string): Promise<void> => 
         ipcRenderer.invoke('buckets:remove', bucketId),
+
+    renameBucket: (bucketId: string, name: string): Promise<StoredBucket> =>
+        ipcRenderer.invoke('buckets:rename', bucketId, name),
 });

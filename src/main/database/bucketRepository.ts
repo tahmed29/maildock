@@ -1,4 +1,4 @@
-import type Database from "better-sqlite3";
+import Database from "better-sqlite3";
 import { randomUUID } from "node:crypto";
 
 export type StoredBucket = {
@@ -59,4 +59,47 @@ export function deleteBucket(
   database.prepare(`
     DELETE FROM buckets WHERE id = ?
   `).run(bucketId);
+}
+
+export function updateBucketName(
+  database: Database.Database,
+  bucketId: unknown,
+  name: unknown,
+): StoredBucket {
+  if (typeof bucketId !== "string" || !bucketId.trim()) {
+    throw new Error("Invalid bucket ID.");
+  }
+
+  if (typeof name !== "string" || !name.trim()) {
+    throw new Error("Enter a bucket name.");
+  }
+
+  const trimmedName = name.trim();
+
+  if (trimmedName.length > 60) {
+    throw new Error("Use 60 characters or fewer.");
+  }
+
+  try {
+    const result = database.prepare(`
+      UPDATE buckets
+      SET name = ?, name_key = ?
+      WHERE id = ?
+    `).run(trimmedName, trimmedName.toLowerCase(), bucketId);
+
+    if (result.changes === 0) {
+      throw new Error("Bucket no longer exists.");
+    }
+  } catch (error: unknown) {
+    if (
+      error instanceof Database.SqliteError &&
+      error.code === "SQLITE_CONSTRAINT_UNIQUE"
+    ) {
+      throw new Error("A bucket with that name already exists.");
+    }
+
+    throw error;
+  }
+
+  return { id: bucketId, name: trimmedName };
 }
