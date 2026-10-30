@@ -1,19 +1,14 @@
 import {contextBridge, ipcRenderer} from 'electron';
-import type { StoredBucket } from './database/bucketRepository.js';
+import type { MaildockApi } from '../shared/contracts.js';
 
-contextBridge.exposeInMainWorld('maildock', {
-    getAppVersion: (): Promise<string> => 
-        ipcRenderer.invoke('app:get-version'),
+const api: MaildockApi = {
+  getAppVersion: () => ipcRenderer.invoke("app:get-version"),
+  listBuckets: () => ipcRenderer.invoke("buckets:list"),
+  createBucket: (name) => ipcRenderer.invoke("buckets:create", name),
+  removeBucket: (bucketId) =>
+    ipcRenderer.invoke("buckets:remove", bucketId),
+  renameBucket: (bucketId, name) =>
+    ipcRenderer.invoke("buckets:rename", bucketId, name),
+};
 
-    listBuckets: (): Promise<StoredBucket[]> => 
-        ipcRenderer.invoke('buckets:list'),
-    
-    createBucket: (name: string): Promise<StoredBucket> => 
-        ipcRenderer.invoke('buckets:create', name),
-
-    removeBucket: (bucketId: string): Promise<void> => 
-        ipcRenderer.invoke('buckets:remove', bucketId),
-
-    renameBucket: (bucketId: string, name: string): Promise<StoredBucket> =>
-        ipcRenderer.invoke('buckets:rename', bucketId, name),
-});
+contextBridge.exposeInMainWorld("maildock", api);

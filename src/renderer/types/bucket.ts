@@ -1,4 +1,1 @@
-export type Bucket = {
-    id: string;
-    name: string;
-};
+export type { Bucket } from "../../shared/contracts";

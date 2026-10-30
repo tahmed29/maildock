@@ -1,10 +1,8 @@
 import Database from "better-sqlite3";
 import { randomUUID } from "node:crypto";
 
-export type StoredBucket = {
-  id: string;
-  name: string;
-};
+import type { Bucket as StoredBucket } from "../../shared/contracts.js";
+export type { Bucket as StoredBucket } from "../../shared/contracts.js";
 
 export function listBuckets(database: Database.Database): StoredBucket[] {
   const statement = database.prepare<[], StoredBucket>(`

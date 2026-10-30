@@ -1,13 +1,7 @@
-import type { Bucket } from "./bucket";
+import type { MaildockApi } from "../../shared/contracts";
 
 declare global {
   interface Window {
-    maildock: {
-      getAppVersion: () => Promise<string>;
-      listBuckets: () => Promise<Bucket[]>;
-      createBucket: (name: string) => Promise<Bucket>;
-      removeBucket: (bucketId: string) => Promise<void>;
-      renameBucket: (bucketId: string, name: string) => Promise<Bucket>;
-    };
+    maildock: MaildockApi;
   }
 }
