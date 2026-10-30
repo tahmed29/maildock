@@ -38,7 +38,9 @@ export default function App() {
         setBuckets((current) => [...current, savedBucket]);
     }
 
-    function removeBucket(bucketId: string) {
+    async function removeBucket(bucketId: string): Promise<void> {
+        await window.maildock.removeBucket(bucketId);
+
         setBuckets((current) => 
             current.filter((bucket) => bucket.id !== bucketId));
     }

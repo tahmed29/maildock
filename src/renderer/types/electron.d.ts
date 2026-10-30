@@ -6,6 +6,7 @@ declare global {
       getAppVersion: () => Promise<string>;
       listBuckets: () => Promise<Bucket[]>;
       createBucket: (name: string) => Promise<Bucket>;
+      removeBucket: (bucketId: string) => Promise<void>;
     };
   }
 }

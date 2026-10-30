@@ -5,7 +5,7 @@ import type { Bucket } from "../types/bucket";
 type BucketsViewProps = {
   buckets: Bucket[];
   onCreate: (name: string) => Promise<void>;
-  onRemove: (bucketId: string) => void;
+  onRemove: (bucketId: string) => Promise<void>;
   onRename: (bucketId: string, name: string) => string | null;
 };
 
@@ -19,6 +19,26 @@ export default function BucketsView({
   const [editingBucketId, setEditingBucketId] = useState<string | null>(null);
   const [draftName, setDraftName] = useState("");
   const [renameError, setRenameError] = useState("");
+
+  const [isRemoving, setIsRemoving] = useState(false);
+  const [removalError, setRemovalError] = useState("");
+
+  async function confirmRemoval(bucketId: string): Promise<void> {
+    if (isRemoving) return;
+
+    setIsRemoving(true);
+    setRemovalError("");
+
+    try {
+      await onRemove(bucketId);
+      setPendingRemovalId(null);
+    } catch (error: unknown) {
+      console.error("Failed to remove bucket:", error);
+      setRemovalError("Could not remove this bucket. Please try again.");
+    } finally {
+      setIsRemoving(false);
+    }
+  }
 
   function startRenaming(bucket: Bucket) {
     setEditingBucketId(bucket.id);
@@ -45,6 +65,7 @@ export default function BucketsView({
           </p>
         </div>
       ) : (
+        <fieldset disabled={isRemoving} className="min-w-0">
         <ul className="mt-8 grid gap-4 sm:grid-cols-2">
           {buckets.map((bucket) => (
             <li
@@ -135,19 +156,21 @@ export default function BucketsView({
 
               {pendingRemovalId === bucket.id ? (
                 <div className="mt-4">
+                  {removalError && (
+                    <p role="alert" className="mb-2 text-sm text-red-400">
+                      {removalError}
+                    </p>
+                  )}
                   <p className="text-sm text-slate-300">
                     Are you sure you want to remove this bucket?
                   </p>
                   <div className="mt-2 flex gap-3">
                     <button
                       type="button"
-                      onClick={() => {
-                        onRemove(bucket.id);
-                        setPendingRemovalId(null);
-                      }}
+                      onClick={() => void confirmRemoval(bucket.id)}
                       className="rounded-md px-3 py-2 text-sm text-red-400 hover:bg-red-400/10"
                     >
-                      Confirm
+                      {isRemoving ? "Removing..." : "Confirm"}
                     </button>
 
                     <button
@@ -165,6 +188,7 @@ export default function BucketsView({
                   onClick={() => {
                     setEditingBucketId(null);
                     setRenameError("");
+                    setRemovalError("");
                     setPendingRemovalId(bucket.id);
                   }}    
                   aria-label={`Remove ${bucket.name} bucket`}
@@ -176,6 +200,7 @@ export default function BucketsView({
             </li>
           ))}
         </ul>
+        </fieldset>
       )}
     </section>
   );

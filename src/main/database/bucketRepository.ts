@@ -47,3 +47,16 @@ if (result.changes === 0) {
 
 return bucket;
 }
+
+export function deleteBucket(
+  database: Database.Database,
+  bucketId: unknown,
+): void {
+  if (typeof bucketId !== "string" || !bucketId.trim()) {
+    throw new Error("Invalid bucket ID.");
+  }
+
+  database.prepare(`
+    DELETE FROM buckets WHERE id = ?
+  `).run(bucketId);
+}

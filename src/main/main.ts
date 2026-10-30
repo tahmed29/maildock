@@ -4,7 +4,7 @@ import { mkdirSync } from "node:fs";
 import { openDatabase } from "./database/connection.js";
 import { pathToFileURL } from "node:url";
 import type { IpcMainInvokeEvent } from "electron";
-import { insertBucket, listBuckets } from "./database/bucketRepository.js";
+import { deleteBucket, insertBucket, listBuckets } from "./database/bucketRepository.js";
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -66,6 +66,11 @@ app.whenReady().then(() => {
   ipcMain.handle("buckets:create", (event, name: unknown) => {
     checkBucketSender(event);
     return insertBucket(database, name);
+  });
+
+  ipcMain.handle("buckets:remove", (event, bucketId: unknown) => {
+    checkBucketSender(event);
+    return deleteBucket(database, bucketId);
   });
 
   createWindow();
