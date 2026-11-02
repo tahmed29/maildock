@@ -6,6 +6,20 @@ import { pathToFileURL } from "node:url";
 import type { IpcMainInvokeEvent } from "electron";
 import { deleteBucket, insertBucket, listBuckets, updateBucketName, } from "./database/bucketRepository.js";
 
+if (!app.requestSingleInstanceLock()) {
+  app.exit(0);
+}
+
+app.on("second-instance", () => {
+  const window = BrowserWindow.getAllWindows()[0];
+
+  if (window) {
+    if (window.isMinimized()) window.restore();
+    window.show();
+    window.focus();
+  }
+});
+
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
     width: 1200,
