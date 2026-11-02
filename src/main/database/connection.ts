@@ -1,13 +1,14 @@
 import Database from "better-sqlite3";
-import { bucketSchema } from "./schema.js";
+import { migrateDatabase } from "./migrations.js";
 
 export function openDatabase(filePath: string): Database.Database {
-  const database = new Database(filePath);
+  const database = new Database(filePath, { timeout: 5000 });
 
   try {
-    database.exec(bucketSchema);
+    database.pragma("foreign_keys = ON");
+    migrateDatabase(database);
     return database;
-  } catch (error) {
+  } catch (error: unknown) {
     database.close();
     throw error;
   }
