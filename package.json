@@ -11,7 +11,8 @@
     "build-renderer": "tsc --project tsconfig.renderer.json && vite build",
     "build": "npm run build:main && npm run build-renderer",
     "start": "npm run build && electron .",
-    "rebuild:native": "electron-rebuild -f -w better-sqlite3"
+    "rebuild:native": "electron-rebuild -f -w better-sqlite3",
+    "test:storage": "npm run build:main && electron tests/storage.cjs"
   },
   "devDependencies": {
     "@electron/rebuild": "4.2.1",
