@@ -1,10 +1,11 @@
 import { app, BrowserWindow, ipcMain } from "electron";
 import { join } from "node:path";
 import { mkdirSync } from "node:fs";
-import { openDatabase } from "./database/connection.js";
 import { pathToFileURL } from "node:url";
 import type { IpcMainInvokeEvent } from "electron";
-import { deleteBucket, insertBucket, listBuckets, updateBucketName, } from "./database/bucketRepository.js";
+import { DatabaseClient } from "./database/client.js";
+
+let database: DatabaseClient | undefined;
 
 if (!app.requestSingleInstanceLock()) {
   app.exit(0);
@@ -19,6 +20,19 @@ app.on("second-instance", () => {
     window.focus();
   }
 });
+
+function checkBucketSender(event: IpcMainInvokeEvent): void {
+    const expectedUrl = pathToFileURL(
+      join(__dirname, "../renderer/index.html"),
+    ).href;
+
+    if (
+      event.senderFrame !== event.sender.mainFrame ||
+      event.senderFrame?.url !== expectedUrl
+    ) {
+      throw new Error("Untrusted bucket request.");
+    }
+  }
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -40,72 +54,86 @@ function createWindow(): void {
     .loadFile(join(__dirname, "../renderer/index.html"))
     .catch((error: unknown) => {
       console.error("Failed to load interface:", error);
-      app.exit(1);
+      app.quit();
     });
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   const storagePath = join(app.getPath("userData"), "storage");
   mkdirSync(storagePath, { recursive: true });
 
   const databasePath = join(storagePath, "maildock.db");
-  const database = openDatabase(databasePath);
+  const client = new DatabaseClient(databasePath);
+  database = client;
 
-  app.once("will-quit", () => {
-    database.close();
-  });
-
-  console.log("Database ready:", databasePath);
+  await client.ping();
+  console.log("Database worker ready:", databasePath);
 
   ipcMain.handle("app:get-version", () => app.getVersion());
 
-    function checkBucketSender(event: IpcMainInvokeEvent): void {
-    const expectedUrl = pathToFileURL(
-      join(__dirname, "../renderer/index.html"),
-    ).href;
-
-    if (
-      event.senderFrame !== event.sender.mainFrame ||
-      event.senderFrame?.url !== expectedUrl
-    ) {
-      throw new Error("Untrusted bucket request.");
-    }
-  }
-
   ipcMain.handle("buckets:list", (event) => {
     checkBucketSender(event);
-    return listBuckets(database);
+    return client.listBuckets();
   });
 
   ipcMain.handle("buckets:create", (event, name: unknown) => {
     checkBucketSender(event);
-    return insertBucket(database, name);
+    return client.createBucket(name);
   });
 
   ipcMain.handle("buckets:remove", (event, bucketId: unknown) => {
     checkBucketSender(event);
-    return deleteBucket(database, bucketId);
+    return client.removeBucket(bucketId);
   });
 
   ipcMain.handle(
     "buckets:rename",
     (event, bucketId: unknown, name: unknown) => {
       checkBucketSender(event);
-      return updateBucketName(database, bucketId, name);
+      return client.renameBucket(bucketId, name);
     },
   );
 
   createWindow();
 
+  let shutdownStarted = false;
+  let canQuit = false;
+
+  app.on("before-quit", (event) => {
+    if (canQuit) return;
+
+    event.preventDefault();
+    if (shutdownStarted) return;
+    shutdownStarted = true;
+
+    void client.close()
+      .catch((error: unknown) => {
+        console.error("Failed to close database worker:", error);
+      })
+      .finally(() => {
+        canQuit = true;
+        app.quit();
+      });
+  });
+
+  createWindow();
+
   // Reopen on macOS dock click.
   app.on("activate", () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
+    if (!shutdownStarted && BrowserWindow.getAllWindows().length === 0) {
       createWindow();
     }
   });
 })
-.catch((error: unknown) => {
+.catch(async (error: unknown) => {
   console.error("Failed to start MailDock:", error);
+  
+  try {
+    await database?.close();
+  } catch (closeError: unknown) {
+    console.error("Failed to clean up database worker:", closeError);
+  }
+
   app.exit(1);
 });
 
